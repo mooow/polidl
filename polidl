@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2016 Lorenzo Mureu
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from selenium import webdriver
+import sys
+import time
+
+URL_LOGIN = 'https://login.didattica.polito.it/secure/ShibLogin.php'
+XPATH_MATERIA = "//a[@class = 'policorpolink' and upper-case(normalize-space(text()))='{0}']"
+FIELD_USERNAME = 'j_username'
+FIELD_PASSWORD = 'j_password'
+
+XPATH_VIDEOLEZIONI_LINKS = "//li[@class = 'h5']/a"
+XPATH_DOWNLOAD_LINK      = "//a[normalize-space(text()) = 'Video']"
+
+PROGRAM = sys.argv[0]
+
+HEADING = """Welcome to {0}.
+Please make sure you have read the instructions before continuing.
+Please wait while Firefox starts up.
+DON'T CLOSE NOR MINIMIZE ITS WINDOW.
+""".format(PROGRAM)
+
+COPYING = """\
+--------------------------------------------------------------------------------
+{0} (C) 2016 Lorenzo Mureu <mureulor@gmail.com>
+This is free software, you can read the terms of its license by passing the 
+`--copyright` option.
+--------------------------------------------------------------------------------\
+""".format(PROGRAM)
+
+LICENSE = """\
+Copyright (C) 2016 Lorenzo Mureu <mureulor@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.\
+"""
+
+USAGE = "Syntax: {0} [--copyright]".format(PROGRAM)
+
+def login(username, password): 
+    b.get(URL_LOGIN)
+    sleep()
+    b.find_element_by_id(FIELD_USERNAME).send_keys(username)
+    b.find_element_by_id(FIELD_PASSWORD).send_keys(password)
+    sleep()
+    b.find_element_by_id('login').submit()
+
+def materia(nome):
+    b.find_element_by_xpath(XPATH_MATERIA.format(nome)).click()
+
+def get_links():
+    i = 0
+    imax = len(b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS))
+    print(imax)
+    fp = open("output", "w")
+    while i < imax:
+        b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)[i].click()
+        sleep()
+        b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
+        sleep()
+        url = b.current_url
+        print("{0}/{1}: {2}".format(i + 1, imax, shrink(url, 50)))
+        fp.write("{0}\n".format(url))
+        b.back()
+        sleep()
+        i = i + 1
+    fp.close()
+
+    
+    global lez, lezs
+    lezs = b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)
+    for lez in lezs:
+        lez.click()
+        b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
+        print(b.current_url)
+        b.back()
+        
+def sleep():
+    i = 0
+    while(b.execute_script("return document.readyState") != "complete"):
+        print(".", end="")
+        i += 1
+        time.sleep(0.100)
+    print()
+    time.sleep(1)
+
+def shrink(string, maxlen = 80):
+    if(len(string) < maxlen): return string
+    idx = (maxlen - 5) // 2
+    return string[:idx] + "[...]" + string[-idx:]
+
+def copyright_notice():
+    print(COPYING)
+
+def usage():
+    print(USAGE)
+
+def parse_options():
+    if len(sys.argv) > 2 : 
+        usage()
+        exit(1)
+    if len(sys.argv) == 2:
+        if sys.argv[1] == "--copyright":
+            license()
+            exit(0)
+        else:
+            usage()
+            exit(1)
+
+def license():
+    print(LICENSE)
+
+if __name__ == "__main__":
+    copyright_notice()
+    parse_options()
+    print(HEADING)
+    global b
+    b = webdriver.Firefox()
+    b.implicitly_wait(3)
+    print("Please fill in login information")
+    username = input("Numero di matricola> ")
+    password = input("Password> ")
+    login(username, password)
+    print("Select the course for which you want to get links, then type OK.")
+    while(input("> ") != "OK"): pass
+    get_links()
+    print("Thank you for using this program. Your links were saved in `output`")
+    print("You can download the lessons by running `wget -nc -i output`")
