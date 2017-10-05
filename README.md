@@ -1,3 +1,8 @@
+# See also (recommended)
+[Another (improved?) url grabber from the same author](https://github.com/mooow/videolez2)
+
+-----
+
 # polidl
 Download PoliTo video lessons!
 
