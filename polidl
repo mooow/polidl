@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
 # Copyright (c) 2016 Lorenzo Mureu
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,6 +31,7 @@ FIELD_PASSWORD = 'j_password'
 
 XPATH_VIDEOLEZIONI_LINKS = "//li[@class = 'h5']/a"
 XPATH_DOWNLOAD_LINK      = "//a[normalize-space(text()) = 'Video']"
+XPATH_DOWNLOAD_LINK_LQ   = "//a[normalize-space(text()) = 'iPhone']"
 
 PROGRAM = sys.argv[0]
 
@@ -43,7 +44,7 @@ DON'T CLOSE NOR MINIMIZE ITS WINDOW.
 COPYING = """\
 --------------------------------------------------------------------------------
 {0} (C) 2016 Lorenzo Mureu <mureulor@gmail.com>
-This is free software, you can read the terms of its license by passing the 
+This is free software, you can read the terms of its license by passing the
 `--copyright` option.
 --------------------------------------------------------------------------------\
 """.format(PROGRAM)
@@ -72,7 +73,7 @@ SOFTWARE.\
 
 USAGE = "Syntax: {0} [--copyright]".format(PROGRAM)
 
-def login(username, password): 
+def login(username, password):
     b.get(URL_LOGIN)
     sleep()
     b.find_element_by_id(FIELD_USERNAME).send_keys(username)
@@ -101,7 +102,7 @@ def get_links():
         i = i + 1
     fp.close()
 
-    
+
     global lez, lezs
     lezs = b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)
     for lez in lezs:
@@ -109,15 +110,15 @@ def get_links():
         b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
         print(b.current_url)
         b.back()
-        
+
 def sleep():
     i = 0
     while(b.execute_script("return document.readyState") != "complete"):
         print(".", end="")
         i += 1
         time.sleep(0.100)
-    print()
-    time.sleep(1)
+    #print()
+    time.sleep(0.1)
 
 def shrink(string, maxlen = 80):
     if(len(string) < maxlen): return string
@@ -131,7 +132,7 @@ def usage():
     print(USAGE)
 
 def parse_options():
-    if len(sys.argv) > 2 : 
+    if len(sys.argv) > 2 :
         usage()
         exit(1)
     if len(sys.argv) == 2:
