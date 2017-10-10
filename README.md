@@ -44,7 +44,7 @@ You can read the terms by running:
     polidl --copyright
 
 ## Author
-polidl is Copyright © 2016 of Lorenzo Mureu
+polidl is Copyright © 2016-2017 of Lorenzo Mureu
 
 -----
 
