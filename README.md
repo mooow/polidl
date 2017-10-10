@@ -1,8 +1,3 @@
-# See also (recommended)
-[Another (improved?) url grabber from the same author](https://github.com/mooow/videolez2)
-
------
-
 # polidl
 Download PoliTo video lessons!
 
@@ -36,6 +31,12 @@ The following command will take care of everything
     
     pacman -S python python-selenium geckodriver firefox --needed
 
+### Installation on Mac
+Assuming you have already installed Firefox:
+ 
+    brew install python3 geckodriver
+    pip3 install --user selenium
+
 ## License
 This program is released with the terms of the MIT License.
 You can read the terms by running:
@@ -44,3 +45,9 @@ You can read the terms by running:
 
 ## Author
 polidl is Copyright © 2016 of Lorenzo Mureu
+
+-----
+
+# See also
+If your video lessons meet the requisites, you might try [a better downloader](https://github.com/mooow/videolez2)
+
