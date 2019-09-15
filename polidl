@@ -87,8 +87,8 @@ def materia(nome):
     b.find_element_by_xpath(XPATH_MATERIA.format(nome)).click()
 
 def get_links():
-    i = 0
     imax = len(b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS))
+    i = int(input(f"Inserisci prima videolezione [1/{imax}]: ")) - 1
     print(imax)
     fp = open("output", "w")
     while i < imax:
@@ -108,7 +108,9 @@ def get_links():
 
     global lez, lezs
     lezs = b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)
-    for lez in lezs:
+    
+    start = int(input(f"Inserisci prima videolezione [1/{len(lezs)}]: ")) - 1
+    for lez in lezs[start:]:
         lez.click()
         b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
         sleep()
