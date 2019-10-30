@@ -77,10 +77,10 @@ USAGE = "Syntax: {0} [--copyright]".format(PROGRAM)
 
 def login(username, password):
     b.get(URL_LOGIN)
-    sleep()
+    wait()
     b.find_element_by_id(FIELD_USERNAME).send_keys(username)
     b.find_element_by_id(FIELD_PASSWORD).send_keys(password)
-    sleep()
+    wait()
     b.find_element_by_id('login').submit()
 
 def materia(nome):
@@ -93,24 +93,24 @@ def get_links():
     with open("links.txt", "w") as fp:
         for i in range(start, imax):
             b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)[i].click()
-            sleep()
+            wait()
             b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
-            sleep()
+            wait()
             url = b.current_url
             print("{0}/{1}: {2}".format(i + 1, imax, shrink(url, 50)))
             fp.write(url + "\n")
             fp.flush()
             b.back()
-            sleep()
+            wait()
 
-def sleep():
-    i = 0
-    while(b.execute_script("return document.readyState") != "complete"):
-        print(".", end="")
-        i += 1
-        time.sleep(SLEEP_T)
-    #print()
-    time.sleep(SLEEP_T)
+
+def wait():
+    while b.execute_script("return document.readyState") != "complete":
+        # print(".", end="")
+        sleep(SLEEP_T)
+    # print()
+    # sleep(SLEEP_T)
+
 
 def shrink(string, maxlen = 80):
     if(len(string) < maxlen): return string
