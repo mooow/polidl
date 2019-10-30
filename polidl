@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2016-2017 Lorenzo Mureu
+# Copyright (c) 2016-2019 Lorenzo Mureu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -45,14 +45,14 @@ DON'T CLOSE NOR MINIMIZE ITS WINDOW.
 
 COPYING = """\
 --------------------------------------------------------------------------------
-{0} (C) 2016 Lorenzo Mureu <mureulor@gmail.com>
+{0} (C) 2016-2019 Lorenzo Mureu <mureulor@gmail.com>
 This is free software, you can read the terms of its license by passing the
 `--copyright` option.
 --------------------------------------------------------------------------------\
 """.format(PROGRAM)
 
 LICENSE = """\
-Copyright (C) 2016 Lorenzo Mureu <mureulor@gmail.com>
+Copyright (C) 2016-2019 Lorenzo Mureu <mureulor@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
