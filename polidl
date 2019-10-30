@@ -88,34 +88,20 @@ def materia(nome):
 
 def get_links():
     imax = len(b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS))
-    i = int(input(f"Inserisci prima videolezione [1/{imax}]: ")) - 1
-    print(imax)
-    fp = open("output", "w")
-    while i < imax:
-        b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)[i].click()
-        sleep()
-        b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
-        sleep()
-        url = b.current_url
-        print("{0}/{1}: {2}".format(i + 1, imax, shrink(url, 50)))
-        fp.write("{0}\n".format(url))
-        fp.flush()
-        b.back()
-        sleep()
-        i = i + 1
-    fp.close()
+    start = int(input(f"Inserisci prima videolezione [1/{imax}]: ")) - 1
 
-
-    global lez, lezs
-    lezs = b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)
-    
-    start = int(input(f"Inserisci prima videolezione [1/{len(lezs)}]: ")) - 1
-    for lez in lezs[start:]:
-        lez.click()
-        b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
-        sleep()
-        print(b.current_url)
-        b.back()
+    with open("links.txt", "w") as fp:
+        for i in range(start, imax):
+            b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)[i].click()
+            sleep()
+            b.find_element_by_xpath(XPATH_DOWNLOAD_LINK).click()
+            sleep()
+            url = b.current_url
+            print("{0}/{1}: {2}".format(i + 1, imax, shrink(url, 50)))
+            fp.write(url + "\n")
+            fp.flush()
+            b.back()
+            sleep()
 
 def sleep():
     i = 0
