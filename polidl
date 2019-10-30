@@ -20,9 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from selenium import webdriver
+import json
+import logging
 import sys
-import time
+from dataclasses import dataclass, field
+from time import sleep
+
+from selenium import webdriver
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+CONFIG_FILE = "config.json"
 
 URL_LOGIN = 'https://login.didattica.polito.it/secure/ShibLogin.php'
 XPATH_MATERIA = "//a[@class = 'policorpolink' and upper-case(normalize-space(text()))='{0}']"
@@ -30,8 +39,8 @@ FIELD_USERNAME = 'j_username'
 FIELD_PASSWORD = 'j_password'
 
 XPATH_VIDEOLEZIONI_LINKS = "//li[@class = 'h5']/a"
-XPATH_DOWNLOAD_LINK      = "//a[normalize-space(text()) = 'Video']"
-XPATH_DOWNLOAD_LINK_LQ   = "//a[normalize-space(text()) = 'iPhone']"
+XPATH_DOWNLOAD_LINK = "//a[normalize-space(text()) = 'Video']"
+XPATH_DOWNLOAD_LINK_LQ = "//a[normalize-space(text()) = 'iPhone']"
 
 SLEEP_T = 0.01
 
@@ -75,7 +84,57 @@ SOFTWARE.\
 
 USAGE = "Syntax: {0} [--copyright]".format(PROGRAM)
 
+
+@dataclass
+class Configuration:
+    username: str
+    password: str
+    url: str
+    output_file: str = field(default="links.txt")
+
+    @staticmethod
+    def from_file(file_path=CONFIG_FILE):
+        logger.info(f"Using configuration file: '{file_path}'.")
+        with open(CONFIG_FILE, "r") as fp:
+            obj = json.load(fp)
+
+            # Parse required parameters
+            if "username" not in obj:
+                logger.error("Parsing error: field `username` not found")
+                return
+            if "password" not in obj:
+                logger.error("Parsing error: field `password` not found")
+                return
+            if "url" not in obj:
+                logger.error("Parsing error: field `password` not found")
+                return
+
+            conf = Configuration(obj["username"], obj["password"], obj["url"])
+
+            # Parse optional parameters
+            if "output_file" in obj:
+                conf.output_file = obj["output_file"]
+
+            return conf
+
+    @staticmethod
+    def interactive():
+        logger.info("Using interactive mode.")
+        username = input("Username: ")
+        password = input("Password: ")
+        url = input("URL: ")
+        return Configuration(username, password, url)
+
+    @classmethod
+    def default(cls):
+        try:
+            return cls.from_file()
+        except (FileNotFoundError, json.JSONDecodeError):
+            return cls.interactive()
+
+
 def login(username, password):
+    logger.info(f"Logging in with credentials: {username}:{password}")
     b.get(URL_LOGIN)
     wait()
     b.find_element_by_id(FIELD_USERNAME).send_keys(username)
@@ -86,11 +145,12 @@ def login(username, password):
 def materia(nome):
     b.find_element_by_xpath(XPATH_MATERIA.format(nome)).click()
 
-def get_links():
+
+def get_links(output_file):
     imax = len(b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS))
     start = int(input(f"Inserisci prima videolezione [1/{imax}]: ")) - 1
 
-    with open("links.txt", "w") as fp:
+    with open(output_file, "w") as fp:
         for i in range(start, imax):
             b.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS)[i].click()
             wait()
@@ -112,19 +172,24 @@ def wait():
     # sleep(SLEEP_T)
 
 
-def shrink(string, maxlen = 80):
-    if(len(string) < maxlen): return string
-    idx = (maxlen - 5) // 2
+def shrink(string, max_length=80):
+    if len(string) < max_length:
+        return string
+
+    idx = (max_length - 5) // 2
     return string[:idx] + "[...]" + string[-idx:]
+
 
 def copyright_notice():
     print(COPYING)
 
+
 def usage():
     print(USAGE)
 
+
 def parse_options():
-    if len(sys.argv) > 2 :
+    if len(sys.argv) > 2:
         usage()
         exit(1)
     if len(sys.argv) == 2:
@@ -135,18 +200,24 @@ def parse_options():
             usage()
             exit(1)
 
+
 def license():
     print(LICENSE)
+
 
 if __name__ == "__main__":
     copyright_notice()
     parse_options()
     print(HEADING)
-    global b
+
+    # Choose one
     b = webdriver.Firefox()
-    #b = webdriver.PhantomJS()
+    # b = webdriver.PhantomJS()
+
     b.set_window_size(1120, 550)
 
+    config = Configuration.default()
+    logger.info(f"Configuration is: {config}")
 
     b.implicitly_wait(3)
     print("Please fill in login information")
@@ -154,11 +225,9 @@ if __name__ == "__main__":
     password = input("Password> ")
     login(username, password)
 
-    url = input("url: ")
-    b.get(url)
+    b.get(config.url)
+    get_links(config.output_file)
 
-    #print("Select the course for which you want to get links, then type OK.")
-    #while(input("> ") != "OK"): pass
-    get_links()
-    print("Thank you for using this program. Your links were saved in `output`")
-    print("You can download the lessons by running `wget -nc -i output`")
+    print(f"""Thank you for using this program.
+Your links were saved in `{config.output_file}`
+You can download the lessons by running `wget -nc -i {config.output_file}`""")
