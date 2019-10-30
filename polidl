@@ -34,6 +34,11 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = "config.json"
 
 URL_LOGIN = 'https://login.didattica.polito.it/secure/ShibLogin.php'
+URL_INTERNAL_LOGIN_PUSH = "https://idp.polito.it/idp/x509mixed-login"
+URL_INTERNAL_REDIRECT = "https://idp.polito.it/idp/profile/SAML2/Redirect/SSO"
+URL_INTERNAL_LOGIN_REQUIRED = "https://idp.polito.it/idp/Authn/X509Mixed/UserPasswordLogin"
+URL_DIDATTICA_LANDING = "https://didattica.polito.it/portal/page/portal/home/Studente"
+
 XPATH_MATERIA = "//a[@class = 'policorpolink' and upper-case(normalize-space(text()))='{0}']"
 FIELD_USERNAME = 'j_username'
 FIELD_PASSWORD = 'j_password'
@@ -142,6 +147,21 @@ def login(username, password):
     wait()
     b.find_element_by_id('login').submit()
 
+    while b.current_url in [URL_INTERNAL_LOGIN_PUSH, URL_INTERNAL_REDIRECT]:
+        sleep(SLEEP_T)
+
+    if b.current_url == URL_DIDATTICA_LANDING:
+        logger.info("Login succesful.")
+        return True
+
+    if b.current_url == URL_INTERNAL_LOGIN_REQUIRED:
+        logger.error("Login failed.")
+        return False
+
+    logger.warning(f"Unknown response: {b.current_url}")
+    return False
+
+
 def materia(nome):
     b.find_element_by_xpath(XPATH_MATERIA.format(nome)).click()
 
@@ -219,11 +239,8 @@ if __name__ == "__main__":
     config = Configuration.default()
     logger.info(f"Configuration is: {config}")
 
-    b.implicitly_wait(3)
-    print("Please fill in login information")
-    username = input("Numero di matricola> ")
-    password = input("Password> ")
-    login(username, password)
+    if not login(config.username, config.password):
+        exit(1)
 
     b.get(config.url)
     get_links(config.output_file)
