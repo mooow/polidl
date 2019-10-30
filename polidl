@@ -245,6 +245,7 @@ if __name__ == "__main__":
     b.get(config.url)
     get_links(config.output_file)
 
+    b.close()
     print(f"""Thank you for using this program.
 Your links were saved in `{config.output_file}`
 You can download the lessons by running `wget -nc -i {config.output_file}`""")
