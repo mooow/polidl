@@ -23,7 +23,7 @@
 import json
 import logging
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from time import sleep
 
 from selenium import webdriver
@@ -128,7 +128,9 @@ class Configuration:
         username = input("Username: ")
         password = input("Password: ")
         url = input("URL: ")
-        return Configuration(username, password, url)
+        config = Configuration(username, password, url)
+        config.serialize()
+        return config
 
     @classmethod
     def default(cls):
@@ -136,6 +138,11 @@ class Configuration:
             return cls.from_file()
         except (FileNotFoundError, json.JSONDecodeError):
             return cls.interactive()
+
+    def serialize(self, file_path=CONFIG_FILE):
+        with open(file_path, "w") as fp:
+            logger.info(f"Saving configuration file as {file_path}")
+            json.dump(asdict(self), fp)
 
 
 def login(username, password):
