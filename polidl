@@ -254,7 +254,7 @@ def main():
     driver.close()
     print(f"""Thank you for using this program.
 Your links were saved in `{config.output_file}`
-You can download the lessons by running `wget -nc -i {config.output_file}`""")
+You can download the lessons by running `wget -nc -ci {config.output_file}`""")
 
 
 if __name__ == "__main__":
