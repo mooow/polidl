@@ -54,8 +54,6 @@ PROGRAM = sys.argv[0]
 
 HEADING = """Welcome to {0}.
 Please make sure you have read the instructions before continuing.
-Please wait while Firefox starts up.
-DON'T CLOSE NOR MINIMIZE ITS WINDOW.
 """.format(PROGRAM)
 
 COPYING = """\
@@ -155,6 +153,7 @@ def login(username, password):
     wait()
     driver.find_element_by_id('login').submit()
 
+    logger.info("Waiting for after-login redirect...")
     while driver.current_url in [URL_INTERNAL_LOGIN_PUSH,
                                  URL_INTERNAL_REDIRECT]:
         sleep(SLEEP_T)
@@ -235,12 +234,10 @@ def main():
     parse_options()
     print(HEADING)
 
-    # Choose one
     global driver
-    driver = webdriver.Firefox()
-    # b = webdriver.PhantomJS()
-
-    driver.set_window_size(1120, 550)
+    options = webdriver.firefox.options.Options()
+    options.headless = True
+    driver = webdriver.Firefox(options=options)
 
     config = Configuration.default()
     logger.info(f"Configuration is: {config}")
