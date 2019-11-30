@@ -22,11 +22,14 @@
 
 import json
 import logging
+import re
 import sys
 from dataclasses import dataclass, field, asdict
+from os import listdir
 from time import sleep
+from typing import Any, Callable
 
-from selenium import webdriver
+from selenium.webdriver import firefox
 
 driver = None
 logging.basicConfig(level=logging.INFO)
@@ -134,9 +137,11 @@ class Configuration:
     @classmethod
     def default(cls):
         try:
-            return cls.from_file()
+            config = cls.from_file()
         except (FileNotFoundError, json.JSONDecodeError):
-            return cls.interactive()
+            config = cls.interactive()
+        logger.debug(f"{config=}")
+        return config
 
     def serialize(self, file_path=CONFIG_FILE):
         with open(file_path, "w") as fp:
@@ -159,7 +164,7 @@ def login(username, password):
         sleep(SLEEP_T)
 
     if driver.current_url == URL_DIDATTICA_LANDING:
-        logger.info("Login succesful.")
+        logger.info("Login successful.")
         return True
 
     if driver.current_url == URL_INTERNAL_LOGIN_REQUIRED:
@@ -170,13 +175,48 @@ def login(username, password):
     return False
 
 
-def materia(nome):
-    driver.find_element_by_xpath(XPATH_MATERIA.format(nome)).click()
+def _remove_extension(string):
+    return re.sub(r"\..+$", "", string)
+
+
+def _extract_last_number(string):
+    if len(numbers := re.findall(r"\d+", string)) > 0:
+        return int(numbers[-1])
+    return 0
+
+
+# def _input_range(prompt, valid_range: range = None, default=0):
+#     return _input(f"{prompt} [{range.start, range.stop}]", default,
+#                   lambda el: el in valid_range)
+
+
+def _input(prompt: str, default: Any, f: Callable):
+    while True:
+        s = input(f"{prompt}, {default=}: ")
+        if s == "":
+            return default
+
+        try:
+            return f(s)
+        except ValueError:
+            pass
+
+
+def guess_last_lesson():
+    return max(_extract_last_number(_remove_extension(file))
+               for file in listdir())
 
 
 def get_links(output_file):
     imax = len(driver.find_elements_by_xpath(XPATH_VIDEOLEZIONI_LINKS))
-    start = int(input(f"Inserisci prima videolezione [1/{imax}]: ")) - 1
+    # default = guess_last_lesson() + 1
+    start = guess_last_lesson()
+    logger.info(f"Next video lesson is #{start + 1} (index {start})")
+
+    if start > imax:
+        print("Already up to date.")
+    # start = _input(f"First lesson [1, {imax}]", default,
+    #                lambda s: int(s) in range(1, imax + 1))
 
     with open(output_file, "w") as fp:
         for i in range(start, imax):
@@ -235,12 +275,11 @@ def main():
     print(HEADING)
 
     global driver
-    options = webdriver.firefox.options.Options()
+    options = firefox.options.Options()
     options.headless = True
-    driver = webdriver.Firefox(options=options)
+    driver = firefox.webdriver.WebDriver(options=options)
 
     config = Configuration.default()
-    logger.info(f"Configuration is: {config}")
 
     if not login(config.username, config.password):
         exit(1)
